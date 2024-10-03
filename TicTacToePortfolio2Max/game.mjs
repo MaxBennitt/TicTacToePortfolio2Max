@@ -216,7 +216,9 @@ function evaluateGameState() {
 function updateGameBoardState(move) {
     const ROW_ID = 0;
     const COLUMN_ID = 1;
-    gameboard[move[ROW_ID]][move[COLUMN_ID]] = currentPlayer;
+    let row = parseInt(move[ROW_ID]) - 1;
+    let col = parseInt(move[COLUMN_ID]) - 1;
+    gameboard[row][col] = currentPlayer;
 }
 
 async function getGameMoveFromCurrentPlayer() {
@@ -236,17 +238,19 @@ function isValidPositionOnBoard(position) {
         return false;
     }
 
+    let row = parseInt(position[0]) - 1;
+    let col = parseInt(position[1]) - 1;
+
     let isValidInput = true;
-    if (position[0] * 1 != position[0] && position[1] * 1 != position[1]) {
+    if (isNaN(row) || isNaN(col)) {
         // Not Numbers
-        inputWasCorrect = false;
-    } else if (position[0] > GAME_BOARD_SIZE && position[1] > GAME_BOARD_SIZE) {
+        isValidInput = false;
+    } else if (row < 0 || row >= GAME_BOARD_SIZE || col < 0 || col >= GAME_BOARD_SIZE) {
         // Not on board
-        inputWasCorrect = false;
-    }
-    else if (Number.parseInt(position[0]) != position[0] && Number.parseInt(position[1]) != position[1]) {
+        isValidInput = false;
+    } else if (gameboard[row][col] !== 0) {
         // Position taken.
-        inputWasCorrect = false;
+        isValidInput = false;
     }
 
 
