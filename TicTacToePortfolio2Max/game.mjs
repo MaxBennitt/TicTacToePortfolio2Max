@@ -385,7 +385,6 @@ function isValidPositionOnBoard(position) {
         return false;
     }
 
-
     return true;
 }
 
@@ -414,7 +413,6 @@ function showGameBoardWithCurrentState() {
                 rowOutput += ` ${BOARD_COLORS.PLAYER_2}${BOARD_MARKS.PLAYER_2}${ANSI.RESET} ${verticalLine}`;
             }
         }
-
         console.log(rowOutput);
     }
     console.log(horizontalLine)
@@ -436,9 +434,7 @@ function createGameBoard() {
         }
         newBoard[currentRow] = row;
     }
-
     return newBoard;
-
 }
 
 function clearScreen() {
