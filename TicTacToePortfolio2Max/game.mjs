@@ -405,22 +405,29 @@ function showHUD() {
 }
 
 function showGameBoardWithCurrentState() {
+    const horizontalLine = '  +---+---+---+';
+    const verticalLine = '|';
+
+    console.log('    1   2   3')
+
     for (let currentRow = 0; currentRow < GAME_BOARD_SIZE; currentRow++) {
-        let rowOutput = "";
+        console.log(horizontalLine)
+        let rowOutput = `${currentRow + 1} ${verticalLine}`;
         for (let currentCol = 0; currentCol < GAME_BOARD_SIZE; currentCol++) {
             let cell = gameboard[currentRow][currentCol];
             if (cell == 0) {
-                rowOutput += "_ ";
+                rowOutput += `   ${verticalLine}`;
             }
             else if (cell > 0) {
-                rowOutput += "X ";
+                rowOutput += ` ${ANSI.COLOR.RED}X${ANSI.RESET} ${verticalLine}`;
             } else {
-                rowOutput += "O ";
+                rowOutput += ` ${ANSI.COLOR.BLUE}O${ANSI.RESET} ${verticalLine}`;
             }
         }
 
-        print(rowOutput);
+        console.log(rowOutput);
     }
+    console.log(horizontalLine)
 }
 
 function initializeGame() {
