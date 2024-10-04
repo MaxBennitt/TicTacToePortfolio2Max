@@ -13,7 +13,7 @@ const DICTIONARY = {
         LANGUAGE_CHOICE: "Choose language (en/no)",
         PLAYER_TURN: "Player {0} it is your turn",
         PLACE_MARK: "Place your mark at: ",
-        WINNER: "Player {0} wins!",
+        WINNER: "You win player",
         DRAW: "It's a draw!",
         GAME_OVER: "GAME OVER",
         GAME_MODE_SELECTION: "Select game mode",

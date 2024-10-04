@@ -10,5 +10,4 @@ function print(text) {
     console.log(text);
 }
 
-
 export { print, askQuestion };
