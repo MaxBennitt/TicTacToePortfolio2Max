@@ -4,6 +4,7 @@ import { ANSI } from "./ansi.mjs";
 import DICTIONARY from "./language.mjs";
 import showSplashScreen from "./splash.mjs";
 import { getRandomInt } from "./utils.mjs";
+import fs from 'fs';
 
 const GAME_BOARD_SIZE = 3;
 const PLAYER_1 = 1;
@@ -23,7 +24,7 @@ const GAME_MODES = {
 
 const NO_CHOICE = -1;
 
-let language = DICTIONARY.en;
+let language = loadLanguagePreference();
 let gameboard;
 let currentPlayer;
 
@@ -112,10 +113,21 @@ async function showSettings() {
     }
 }
 
+function loadLanguagePreference() {
+    try {
+        const data = fs.readFileSync('language_preference.json', 'utf8');
+        const preference = JSON.parse(data);
+        return DICTIONARY[preference.language] || DICTIONARY.en;
+    } catch (error) {
+        return DICTIONARY.en;
+    }
+}
+
 async function changeLanguage() {
     let newLang = await askQuestion(language.LANGUAGE_CHOICE);
     if (newLang.toLowerCase() === "en" || newLang.toLowerCase() === "no") {
         language = DICTIONARY[newLang.toLowerCase()];
+        fs.writeFileSync('language_preference.json', JSON.stringify({ language: newLang.toLowerCase() }));
         print("Language changed successfully.");
     } else {
         print("Invalid language choice. Language remains unchanged.")
@@ -162,16 +174,68 @@ async function playGame(gameMode) {
 }
 
 function getComputerMove() {
-    let availableMoves = [];
+    const result = minimax(gameboard, currentPlayer, 0);
+    const move = result.row !== undefined ? result : result.move;
+    return [(move.row + 1).toString(), (move.col + 1).toString()];
+}
+
+function minimax(board, player, depth) {
+    if (checkWin(board, PLAYER_1)) return { score: -10 + depth};
+    if (checkWin(board, PLAYER_2)) return { score: 10 - depth};
+    if (isBoardfull(board)) return { score: 0};
+
+    const moves = [];
     for (let i = 0; i < GAME_BOARD_SIZE; i++) {
         for (let j = 0; j < GAME_BOARD_SIZE; j++) {
-            if (gameboard[i][j] === 0) {
-                availableMoves.push([i, j]);
+            if (board[i][j] === 0) {
+                const move = { row: i, col: j }
+                board[i][j] = player;
+                const result = minimax(board, -player, depth + 1);
+                move.score = result.score;
+                board[i][j] = 0;
+                moves.push(move);
             }
         }
     }
-    let randomMove = availableMoves[getRandomInt(0, availableMoves.length - 1)];
-    return [randomMove[0] + 1, randomMove[1] + 1];
+
+    if (moves.length === 0) {
+        return { score: 0 };
+    }
+
+    let bestMove;
+    if (player === PLAYER_2) {
+        let bestScore = -Infinity;
+        for (let i = 0; i < moves.length; i++) {
+            if (moves[i].score > bestScore) {
+                bestScore = moves[i].score;
+                bestMove = i;
+            }
+        }
+    } else {
+        let bestScore = Infinity;
+        for (let i = 0; i < moves.length; i++) {
+            if (moves[i].score < bestScore) {
+                bestScore = moves[i].score;
+                bestMove = i;
+            }
+        }
+    }
+
+    return moves[bestMove];
+}
+
+function checkWin(board, player) {
+    for (let i = 0; i < GAME_BOARD_SIZE; i++) {
+        if (board[i][0] === player && board[i][1] === player && board[i][2] === player) return true;
+        if (board[0][i] === player && board[1][i] === player && board[2][i] === player) return true;
+    }
+    if (board[0][0] === player && board[1][1] === player && board[2][2] === player) return true;
+    if (board[0][2] === player && board[1][1] === player && board[2][0] === player) return true;
+    return false;
+}
+
+function isBoardfull(board) {
+    return board.every(row => row.every(cell => cell !== 0));
 }
 
 async function askWantToPlayAgain() {
@@ -263,10 +327,20 @@ function evaluateGameState() {
 }
 
 function updateGameBoardState(move) {
-    const ROW_ID = 0;
-    const COLUMN_ID = 1;
-    let row = parseInt(move[ROW_ID]) - 1;
-    let col = parseInt(move[COLUMN_ID]) - 1;
+    let row, col;
+
+    if (Array.isArray(move)) {
+        const ROW_ID = 0;
+        const COLUMN_ID = 1;
+        row = parseInt(move[ROW_ID]) - 1;
+        col = parseInt(move[COLUMN_ID]) - 1;
+    } else if (typeof move === 'object') {
+        row = move.row;
+        col = move.col;
+    } else {
+        console.error('Invalid move format');
+        return;
+    }
     
     if (row >= 0 && row < GAME_BOARD_SIZE && col >= 0 && col < GAME_BOARD_SIZE) {
         gameboard[row][col] = currentPlayer;
