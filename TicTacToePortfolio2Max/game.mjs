@@ -3,6 +3,7 @@ import { debug, DEBUG_LEVELS } from "./debug.mjs";
 import { ANSI } from "./ansi.mjs";
 import DICTIONARY from "./language.mjs";
 import showSplashScreen from "./splash.mjs";
+import { getRandomInt } from "./utils.mjs";
 
 const GAME_BOARD_SIZE = 3;
 const PLAYER_1 = 1;
@@ -13,6 +14,11 @@ const MENU_CHOICES = {
     MENU_CHOICE_START_GAME: 1,
     MENU_CHOICE_SHOW_SETTINGS: 2,
     MENU_CHOICE_EXIT_GAME: 3
+};
+
+const GAME_MODES = {
+    PLAYER_VS_PLAYER: 1,
+    PLAYER_VS_COMPUTER: 2
 };
 
 const NO_CHOICE = -1;
@@ -73,6 +79,26 @@ async function showMenu() {
     return choice;
 }
 
+async function selectGameMode() {
+    let choice = -1;
+    let validChoice = false;
+
+    while (!validChoice) {
+        clearScreen();
+        print(ANSI.COLOR.YELLOW + language.GAME_MODE_SELECTION + ANSI.RESET);
+        print(language.PLAYER_VS_PLAYER);
+        print(language.PLAYER_VS_COMPUTER);
+
+        choice = await askQuestion("");
+
+        if ([GAME_MODES.PLAYER_VS_PLAYER, GAME_MODES.PLAYER_VS_COMPUTER].includes(Number(choice))) {
+            validChoice = true;
+        }
+    }
+
+    return Number(choice);
+}
+
 async function showSettings() {
     clearScreen();
     print(ANSI.COLOR.YELLOW + language.SETTINGS_TITLE + ANSI.RESET);
@@ -102,18 +128,28 @@ async function runGame() {
 
     while (isPlaying) { // Do the following until the player dos not want to play anymore. 
         initializeGame(); // Reset everything related to playing the game
-        isPlaying = await playGame(); // run the actual game 
+        let gameMode = await selectGameMode();
+        isPlaying = await playGame(gameMode); // run the actual game 
     }
 }
 
-async function playGame() {
+async function playGame(gameMode) {
     // Play game..
     let outcome;
     do {
         clearScreen();
         showGameBoardWithCurrentState();
         showHUD();
-        let move = await getGameMoveFromCurrentPlayer();
+
+        let move
+        if (gameMode === GAME_MODES.PLAYER_VS_COMPUTER && currentPlayer === PLAYER_2) {
+            print(language.COMPUTER_TURN);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            move = getComputerMove();
+        } else {
+            move = await getGameMoveFromCurrentPlayer();
+        }
+
         updateGameBoardState(move);
         outcome = evaluateGameState();
         if (outcome !== 0) break;
@@ -123,6 +159,19 @@ async function playGame() {
     showGameSummary(outcome);
 
     return await askWantToPlayAgain();
+}
+
+function getComputerMove() {
+    let availableMoves = [];
+    for (let i = 0; i < GAME_BOARD_SIZE; i++) {
+        for (let j = 0; j < GAME_BOARD_SIZE; j++) {
+            if (gameboard[i][j] === 0) {
+                availableMoves.push([i, j]);
+            }
+        }
+    }
+    let randomMove = availableMoves[getRandomInt(0, availableMoves.length - 1)];
+    return [randomMove[0] + 1, randomMove[1] + 1];
 }
 
 async function askWantToPlayAgain() {
@@ -218,7 +267,12 @@ function updateGameBoardState(move) {
     const COLUMN_ID = 1;
     let row = parseInt(move[ROW_ID]) - 1;
     let col = parseInt(move[COLUMN_ID]) - 1;
-    gameboard[row][col] = currentPlayer;
+    
+    if (row >= 0 && row < GAME_BOARD_SIZE && col >= 0 && col < GAME_BOARD_SIZE) {
+        gameboard[row][col] = currentPlayer;
+    } else {
+        console.error(`Invalid move: row ${row + 1}, col ${col + 1}`);
+    }
 }
 
 async function getGameMoveFromCurrentPlayer() {
@@ -226,7 +280,7 @@ async function getGameMoveFromCurrentPlayer() {
     do {
         let rawInput = await askQuestion(language.PLACE_MARK);
         position = rawInput.split(" ");
-    } while (isValidPositionOnBoard(position) == false)
+    } while (!isValidPositionOnBoard(position))
 
     return position
 }
@@ -241,20 +295,23 @@ function isValidPositionOnBoard(position) {
     let row = parseInt(position[0]) - 1;
     let col = parseInt(position[1]) - 1;
 
-    let isValidInput = true;
     if (isNaN(row) || isNaN(col)) {
         // Not Numbers
-        isValidInput = false;
-    } else if (row < 0 || row >= GAME_BOARD_SIZE || col < 0 || col >= GAME_BOARD_SIZE) {
+        return false;
+    }
+    
+    if (row < 0 || row >= GAME_BOARD_SIZE || col < 0 || col >= GAME_BOARD_SIZE) {
         // Not on board
-        isValidInput = false;
-    } else if (gameboard[row][col] !== 0) {
+        return false;
+    }
+    
+    if (gameboard[row][col] !== 0) {
         // Position taken.
-        isValidInput = false;
+        return false;
     }
 
 
-    return isValidInput;
+    return true;
 }
 
 function showHUD() {
@@ -273,7 +330,7 @@ function showGameBoardWithCurrentState() {
             else if (cell > 0) {
                 rowOutput += "X ";
             } else {
-                rowOutput += "O  ";
+                rowOutput += "O ";
             }
         }
 
@@ -308,4 +365,3 @@ function clearScreen() {
 
 
 //#endregion
-

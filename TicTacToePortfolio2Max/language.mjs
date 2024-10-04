@@ -16,6 +16,10 @@ const DICTIONARY = {
         WINNER: "Player {0} wins!",
         DRAW: "It's a draw!",
         GAME_OVER: "GAME OVER",
+        GAME_MODE_SELECTION: "Select game mode",
+        PLAYER_VS_PLAYER: "1. Player vs Player",
+        PLAYER_VS_COMPUTER: "2. Player vs Computer",
+        COMPUTER_TURN: "Computer's turn",
     },
     no: {
         PLAY_AGAIN_QUESTION: "Spille en gang til (Ja/nei)? ",
@@ -33,6 +37,10 @@ const DICTIONARY = {
         WINNER: "Spiller {0} vinner!",
         DRAW: "Det ble uavgjort!",
         GAME_OVER: "SPILLET ER OVER",
+        GAME_MODE_SELECTION: "Velg spillmodus",
+        PLAYER_VS_PLAYER: "1. Spiller mot Spiller",
+        PLAYER_VS_COMPUTER: "2. Spiller mot Datamaskin",
+        COMPUTER_TURN: "Datamaskinen's tur",
     }
 };
 
