@@ -29,7 +29,7 @@ let gameboard;
 let currentPlayer;
 
 clearScreen();
-showSplashScreen();
+showCenteredSplashScreen();
 setTimeout(start, 2500); // This waites 2.5seconds before calling the function. i.e. we get to see the splash screen for 2.5 seconds before the menue takes over. 
 
 
@@ -53,6 +53,17 @@ async function start() {
 
     } while (true)
 
+}
+
+function showCenteredSplashScreen() {
+    const art = showSplashScreen();
+    const lines = art.split('\n');
+    const terminalWidth = process.stdout.columns || 80;
+
+    lines.forEach(line => {
+        const padding = Math.max(0, Math.floor((terminalWidth - line.length) / 2));
+        console.log(' '.repeat(padding) + line);
+    });
 }
 
 async function showMenu() {
